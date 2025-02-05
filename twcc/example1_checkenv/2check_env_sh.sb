@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH -A GOV113038
+#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --output=z_2check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_2check_env.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求n個節點
+#SBATCH --gres=gpu:4              ## 請求n張 GPU
+#SBATCH --cpus-per-task=16         ## 單個任務請求 n 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
+#SBATCH --partition=gtest         ## 測試分區
+
+
+# 模組載入 (根據叢集需求)
+module purge
+module load singularity
+
+
+echo "==============================="
+echo "BatchNode :   $(hostname)"
+echo "==============================="
+echo " 
+
+* GPU 資源檢查"
+echo "SLURM_JOB_GPUS=$SLURM_JOB_GPUS"
+echo "SLURM_GPUS_PER_NODE=$SLURM_GPUS_PER_NODE"
+echo "SLURM_GPUS_ON_NODE=$SLURM_GPUS_ON_NODE"
+echo ""
+echo "可用 GPU 檢查 (nvidia-smi)"
+nvidia-smi --list-gpus
+
+
+echo "==============================="
+# 執行 `env.sh`，將環境資訊記錄到 log
+
+## * 這指令未帶入gpu 資源
+# srun --mpi=pmix $SINGULARITY bash env.sh
+
+## * 這指令在 t2 會錯誤， H100可執行，因為 $SLURM_GPUS_ON_NODE 
+# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix  bash env.sh
+
+## * 這指令要解決 t2 上沒有 $SLURM_GPUS_ON_NODE 而做
+NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
+srun --gres=gpu:$NGPU --mpi=pmix  bash env.sh

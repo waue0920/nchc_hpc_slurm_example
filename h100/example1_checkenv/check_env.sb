@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH -A GOV113054
+#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --output=check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=check_env.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求一個節點
+#SBATCH --gres=gpu:4              ## 請求一張 GPU
+#SBATCH --cpus-per-task=16         ## 單個任務請求 1 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 10 分鐘
+#SBATCH --partition=dev         ## 測試分區
+
+
+# 模組載入 (根據叢集需求)
+module purge
+module load singularity
+
+# 切換到工作目錄
+#WORKDIR=/home/waue0920/yolov9
+#cd $WORKDIR
+
+# 定義 Singularity 映像檔路徑
+SIF=/home/waue0920/sif/yolov9-ngc2111-def-20241115.sif
+SINGULARITY="singularity run --nv $SIF"
+
+
+echo "==============================="
+echo "BatchNode :   $(hostname)"
+echo "==============================="
+echo " 
+
+* GPU 資源檢查"
+echo "SLURM_JOB_GPUS=$SLURM_JOB_GPUS"
+echo "SLURM_GPUS_PER_NODE=$SLURM_GPUS_PER_NODE"
+echo "SLURM_GPUS_ON_NODE=$SLURM_GPUS_ON_NODE"
+echo ""
+echo "可用 GPU 檢查 (nvidia-smi)"
+nvidia-smi --list-gpus
+
+
+echo "==============================="
+# 執行 `env.sh`，將環境資訊記錄到 log
+#srun --mpi=pmix $SINGULARITY bash env.sh
+srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash env.sh

@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH -A GOV113038               ## 錢包id
+#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --output=z_1check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_1check.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求n個節點
+#SBATCH --gres=gpu:4              ## 請求n張GPU
+#SBATCH --cpus-per-task=16         ## 單個任務請求n 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
+#SBATCH --partition=gtest         ## 測試分區
+
+# 載入必要的模組 (根據叢集需求)
+module purge
+module load singularity
+
+# 開始記錄
+echo "==============================="
+echo "1. 節點資訊"
+echo "目前執行節點: $(hostname)"
+
+echo "==============================="
+echo "2. GPU 數量"
+nvidia-smi --list-gpus
+
+echo "==============================="
+echo "3. SLURM 系統參數"
+scontrol show job $SLURM_JOB_ID
+
+echo "==============================="
+echo "4. SLURM Nodes"
+echo "Allocated Nodes: $SLURM_JOB_NODELIST"
+
+echo "==============================="
+echo "5. SLURM 環境參數"
+env | grep SLURM
+
+echo "==============================="
+echo "檢查完成！"

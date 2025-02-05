@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=Torch2Yolo    ## Job 名稱
+#SBATCH --mail-type=ALL            ## 收到通知條件
+#SBATCH --mail-user=waue0920@gmail.com
+#SBATCH --nodes=4                  ## 索取 x 個節點
+#SBATCH --cpus-per-task=32          ## 每個 task 索取 x 顆 CPU
+#SBATCH --gres=gpu:8               ## 每個節點索取 x 張 GPU
+#SBATCH --account="GOV113054"      ## iService_ID 計畫 ID
+#SBATCH --partition=normal          ## 使用測試 queue
+#SBATCH --output=slurm-torch2run_yolov9_train2_4node.log  ## 將標準輸出記錄到 log
+#SBATCH --error=slurm-torch2run_yolov9_train2_4node.log   ## 將錯誤輸出記錄到同一個 log
+
+
+# needed in H100
+module purge
+module load singularity
+
+# sif
+SIF=/home/waue0920/sif/pytorch_23.06-py3.sif
+SINGULARITY="singularity run --nv $SIF"
+
+# defind master
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+export MASTER_ADDR
+
+
+# 呼叫 yolo train torchrun 版本
+srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_torchrun.sh

@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH --job-name=T2Yolo9Ob      ## Job 名稱
+#SBATCH --mail-type=ALL            ## 收到通知條件
+#SBATCH --mail-user=waue0920@gmail.com
+#SBATCH --nodes=2                  ## 索取 x 個節點
+#SBATCH --cpus-per-task=32          ## 每個 task 索取 x 顆 CPU
+#SBATCH --gres=gpu:8               ## 每個節點索取 x 張 GPU
+#SBATCH --account="GOV113038"      ## iService_ID 計畫 ID
+#SBATCH --partition=gp2d           ## 使用測試 queue
+#SBATCH --output=z_1slurm-t2run_object_train.log  ## 將標準輸出記錄到 log
+#SBATCH --error=z_1slurm-t2run_object_train.log   ## 將錯誤輸出記錄到同一個 log
+
+
+# needed in H100
+module purge
+module load singularity
+
+# sif
+SIF=/work/waue0920/open_access/yolo9t2_ngc2306_def-20241226.sif
+SINGULARITY="singularity run --nv $SIF"
+
+# defind master
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+export MASTER_ADDR
+
+## twcc 不知為何SLURM_GPUS_ON_NODE 為空
+nvidia-smi --list-gpus
+NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
+export NGPU
+
+echo "==============================="
+
+## 呼叫 yolo train torchrun 版本
+# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
+
+cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY bash yolotrain_object.sh"
+echo $cmd
+$cmd

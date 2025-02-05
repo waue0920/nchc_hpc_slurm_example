@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH -A GOV113038              ## 錢包id
+#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --output=z_3check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_3check_env.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求n個節點
+#SBATCH --gres=gpu:4              ## 請求n張 GPU
+#SBATCH --cpus-per-task=16         ## 單個任務請求 n 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
+#SBATCH --partition=gtest         ## 測試分區
+
+
+# 模組載入 (根據叢集需求)
+module purge
+module load singularity
+
+# sif
+SIF=/work/waue0920/open_access/yolo9t2_ngc2306_def-20241226.sif
+SINGULARITY="singularity run --nv $SIF"
+
+# defind master
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+export MASTER_ADDR
+
+## twcc 不知為何SLURM_GPUS_ON_NODE 為空
+nvidia-smi --list-gpus
+NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
+export NGPU
+
+echo "==============================="
+
+## 呼叫 yolo train torchrun 版本
+# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
+
+cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY bash run_python.sh"
+echo $cmd
+$cmd
