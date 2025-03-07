@@ -1,4 +1,6 @@
+miniWeather/
 wandb/
 datasets/
 ckpt/
 *.log
+output.nc

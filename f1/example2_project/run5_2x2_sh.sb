@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --job-name=mw_r5       ## 工作名稱
+#SBATCH --output=z_run_5.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_run_5.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求n個節點
+#SBATCH --cpus-per-task=2         ## 單個任務請求n 個 CPU
+#SBATCH --ntasks-per-node=1        ## 一個node 跑幾個task
+#SBATCH --partition=ct112        ## 測試分區
+
+
+# sif
+SIF=/work1/waue0920/open_access/miniweather.sif
+SINGULARITY="singularity run $SIF"
+
+# defind master
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+
+echo "==============================="
+
+# cmd="srun --mpi=pmix_v4 $SINGULARITY /home/waue0920/nchc_hpc_slurm_example/f1/miniWeather/miniweather-mpi"
+
+cmd="srun --mpi=pmix_v4 $SINGULARITY ./mpi_env.sh"
+echo $cmd
+$cmd
