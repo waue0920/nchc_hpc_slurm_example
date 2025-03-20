@@ -3,9 +3,9 @@
 #SBATCH --job-name=check_gpu       ## 工作名稱
 #SBATCH --output=z_1check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
 #SBATCH --error=z_1check.log  ## 標準錯誤輸出記錄同一檔案
-#SBATCH --nodes=2                 ## 請求n個節點
-#SBATCH --gres=gpu:4              ## 請求n張GPU
-#SBATCH --cpus-per-task=16         ## 單個任務請求n 個 CPU
+#SBATCH --nodes=2                ## 請求n個節點
+#SBATCH --gres=gpu:8              ## 請求n張GPU
+#SBATCH --cpus-per-task=32         ## 單個任務請求n 個 CPU
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
 #SBATCH --partition=gtest         ## 測試分區
 

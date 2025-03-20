@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:4              ## 請求n張 GPU
 #SBATCH --cpus-per-task=16         ## 單個任務請求 n 個 CPU
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest         ## 測試分區
+#SBATCH --partition=gp2d         ## 測試分區
 
 
 # 模組載入 (根據叢集需求)
