@@ -1,9 +1,14 @@
 #!/bin/bash
 
 ### 參數設定區 ###
+WORKDIR=~/nchc_hpc_slurm_example/f1/example1_checkenv
+
 ## 工作目錄
-WORKDIR=/home/waue0920/yolov9
+HOSTNAME=$(hostname | cut -d '.' -f 1)
+echo "[$HOSTNAME]==================="
+echo "[$HOSTNAME][0] !First: the workspace"
 cd $WORKDIR
+echo "[$HOSTNAME][0] WORKDIR=$WORKDIR"
 
 ## 設定 NCCL
 export NCCL_DEBUG=INFO
@@ -29,34 +34,35 @@ DEVICE_LIST=$(seq -s, 0 $(($NGPU-1)) | paste -sd, -) # 0,1,...n-1
 NNODES=${SLURM_NNODES:-1}               # 節點總數，默認為 1
 NODE_RANK=${SLURM_NODEID}            # 當前節點的 rank，默認為 0
 
-echo "Debug Information:"
-echo "==================="
-echo "SLURM_NODEID: $NODE_RANK"
-echo "SLURM_NNODES: $NNODES"
-echo "SLURM_GPUS_ON_NODE: $NGPU"
-echo "Device: $DEVICE_LIST"
-echo "MASTER_ADDR: $MASTER_ADDR"
-echo "MASTER_PORT: $MASTER_PORT"
-echo "Current Hostname: $(hostname)"
-echo "==================="
+echo "[$HOSTNAME][1] Debug Information:"
+echo "-------------------"
+echo "[$HOSTNAME][1] SLURM_NODEID: $NODE_RANK"
+echo "[$HOSTNAME][1] SLURM_NNODES: $NNODES"
+echo "[$HOSTNAME][1] SLURM_GPUS_ON_NODE: $NGPU"
+echo "[$HOSTNAME][1] Device: $DEVICE_LIST"
+echo "[$HOSTNAME][1] MASTER_ADDR: $MASTER_ADDR"
+echo "[$HOSTNAME][1] MASTER_PORT: $MASTER_PORT"
+echo "[$HOSTNAME][1] Current Hostname: $(hostname)"
+echo "-------------------"
 ### 環境檢查區 ###
 ## Debug: 確認 Python 路徑與版本
-echo "Python Path and Version:"
-echo "==================="
+echo "[$HOSTNAME][2] Python Path and Version:"
+echo "-------------------"
 which python
 python --version
-echo "PYTHONPATH: $PYTHONPATH"
-echo "==================="
+echo "[$HOSTNAME][2] PYTHONPATH: $PYTHONPATH"
+echo "-------------------"
 
 
-echo "Activated Conda Environment:"
-echo "==================="
+echo "[$HOSTNAME][2] Activated Conda Environment:"
+echo "-------------------"
 python -c "import sys; print('\n'.join(sys.path))"
+wandb login
+python -c 'import wandb'
 python -c 'import torch; print(torch.__version__)'
-echo "==================="
-echo "env.py"
+echo "[$HOSTNAME][3] env.py"
 python env.py
-echo "==================="
+echo "-------------------"
 
 
 ## 檢查執行結果
@@ -64,3 +70,5 @@ if [ $? -ne 0 ]; then
   echo "Error: TRAIN_CMD execution failed on node $(hostname)" >&2
   exit 1
 fi
+
+echo "[$HOSTNAME]==================="
