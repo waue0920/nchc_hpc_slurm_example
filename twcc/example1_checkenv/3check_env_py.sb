@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH -A GOV113038              ## 錢包id
-#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --job-name=check_env3       ## 工作名稱
 #SBATCH --output=z_3check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
 #SBATCH --error=z_3check_env.log  ## 標準錯誤輸出記錄同一檔案
 #SBATCH --nodes=2                 ## 請求n個節點
 #SBATCH --gres=gpu:4              ## 請求n張 GPU
 #SBATCH --cpus-per-task=16         ## 單個任務請求 n 個 CPU
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest         ## 測試分區
+#SBATCH --partition=gp2d         ## 測試分區
 
 
 # 模組載入 (根據叢集需求)
