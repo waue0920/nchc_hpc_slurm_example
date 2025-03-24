@@ -10,28 +10,29 @@
 #SBATCH --partition=development         ## 測試分區
 
 
-# 模組載入 (根據叢集需求)
+### 模組載入 (根據叢集需求)
 #module purge
 #module load singularity
 
-# sif
-SIF=/work1/waue0920/open_access/pytorch_23.06-py3.sif
-SINGULARITY="singularity run --nv $SIF"
+### sif
+SIF=/work1/waue0920/open_access/pytorch_23.06-py3.sif  # 這個是 pytorch 環境
+#SIF=/work1/waue0920/open_access/miniweather.sif         # miniweather 預設環境
+# SINGULARITY="singularity run --nv $SIF" # 若此主機有 nvidia gpu 則要加--nv 這個參數
+SINGULARITY="singularity run $SIF"
 
-# defind master
+### defind master
 MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
 export MASTER_ADDR
 
-## twcc 不知為何SLURM_GPUS_ON_NODE 為空
+echo "[$MASTER_ADDR]<start>==============================="
+
+## 以下三行用來檢查 gpu 資訊
 #nvidia-smi --list-gpus
 #NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
 #export NGPU
 
-echo "==============================="
-
-## 呼叫 yolo train torchrun 版本
-# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
 
 cmd="srun --mpi=pmix $SINGULARITY bash run_python.sh"
 echo $cmd
 $cmd
+echo "[$MASTER_ADDR]<done>==============================="

@@ -57,9 +57,6 @@ echo "-------------------"
 echo "[$HOSTNAME][2] Activated Conda Environment:"
 echo "-------------------"
 python -c "import sys; print('\n'.join(sys.path))"
-wandb login
-python -c 'import wandb'
-python -c 'import torch; print(torch.__version__)'
 echo "[$HOSTNAME][3] env.py"
 python env.py
 echo "-------------------"

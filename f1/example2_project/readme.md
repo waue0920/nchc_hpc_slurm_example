@@ -21,13 +21,14 @@ cmake \
   -DLDFLAGS="-L/usr/lib/x86_64-linux-gnu -lpnetcdf" \
   -DNX=1600 \
   -DNZ=800 \
-  -DSIM_TIME=1000
+  -DSIM_TIME=1000 \
+  ..
 EOL
 
 ## 2. compiler
 
 $ singularity shell /work1/waue0920/open_access/miniweather.sif 
-> ./cmake_gnu.sh 
+> bash ./cmake_gnu.sh 
 > make
 > ls 
 > exit
