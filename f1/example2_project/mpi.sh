@@ -14,10 +14,13 @@ echo " * . SLURM 環境參數"
 echo "-----------------"
 env | grep SLURM
 
-cd /home/waue0920/nchc_hpc_slurm_example/f1/miniWeather/
-
+## 方法1: 這種呼叫法， output.nc 會出現在 miniWeather 中
+cd ~/nchc_hpc_slurm_example/f1/miniWeather/
 CMD="./miniweather-mpi"
 
-$CMD
+## 方法2: 這種呼叫法， output.nc 會出現在當前目錄
+#CMD="~/nchc_hpc_slurm_example/f1/miniWeather/miniweather-mpi"
 
+## 執行
+$CMD
 echo "==============================="

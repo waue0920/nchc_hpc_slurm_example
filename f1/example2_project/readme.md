@@ -2,14 +2,16 @@
 
 * login  f1-ilgn01.nchc.org.tw
 * assume "~/nchc_hpc_slurm_example" is the default project dir
+   - cd ~
    - git clone https://github.com/waue0920/nchc_hpc_slurm_example.git
 * assume "~/nchc_hpc_slurm_example/f1/miniWeather" is the miniweather project
-   -  git clone https://github.com/mrnorman/miniWeather
+   - cd ~/nchc_hpc_slurm_example/f1/
+   - git clone https://github.com/mrnorman/miniWeather
 
 ## 1. prepare the code 
 
 $ cd ~/nchc_hpc_slurm_example/f1/miniWeather/c/
-$ cp -r build build_large
+$ mkdir build_large
 $ cd build_large
 $ cat > cmake_gnu.sh <<EOL
 cmake \
