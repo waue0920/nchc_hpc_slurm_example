@@ -16,7 +16,7 @@ module purge
 module load singularity
 
 # sif
-SIF=/work/waue0920/open_access/yolo9t2_ngc2306_def-20241226.sif
+SIF=/work/waue0920/open_access/yolo9t2_ngc2306_20241226.sif
 SINGULARITY="singularity run --nv $SIF"
 
 # defind master
