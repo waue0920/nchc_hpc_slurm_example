@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --job-name=checkenv       ## 工作名稱
+#SBATCH --output=z_2check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_2check.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=1                 ## 請求n個節點
+#SBATCH --ntasks-per-node=2        ## 一個node 跑幾個task
+#SBATCH --cpus-per-task=1         ## 單個任務請求n 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
+#SBATCH --partition=ct112         ## 測試分區
+
+
+# 模組載入 (根據叢集需求)
+
+echo "==============================="
+echo "BatchNode :   $(hostname)"
+echo "==============================="
+
+# 執行 `env.sh`，將環境資訊記錄到 log
+
+## * 這指令要解決 t2 上沒有 $SLURM_GPUS_ON_NODE 而做
+srun --mpi=pmix  bash env.sh

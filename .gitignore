@@ -4,3 +4,6 @@ datasets/
 ckpt/
 *.log
 output.nc
+node*/
+done*/
+test*/

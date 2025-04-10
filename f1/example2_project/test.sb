@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --job-name=mw_r6       ## 工作名稱
+#SBATCH --output=z_test.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_test.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                 ## 請求n個節點
+#SBATCH --ntasks-per-node=8        ## 一個node 跑幾個task
+#SBATCH --cpus-per-task=1         ## 單個任務請求n 個 CPU
+#SBATCH --partition=ct112        ## 測試分區
+
+
+# sif
+SIF=/work1/waue0920/open_access/miniweather.sif
+SINGULARITY="singularity run $SIF"
+
+# defind master
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+
+export OMPI_MCA_btl_tcp_if_include=ib0
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=self,tcp
+export PMIX_MCA_gds=^ds12
+export OMPI_MCA_btl_base_warn_component_unused=0
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
+export OMPI_MCA_rmaps_base_mapping_policy=slot
+export OMPI_MCA_hwloc_base_binding_policy=none
+export OMPI_MCA_mpi_leave_pinned=true
+export OMPI_MCA_rmaps_base_oversubscribe=true
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+echo "==============================="
+
+# cmd="srun --mpi=pmix_v4 $SINGULARITY /home/waue0920/nchc_hpc_slurm_example/f1/miniWeather/miniweather-mpi"
+
+cmd="srun --mpi=pmix_v4 $SINGULARITY ./openmp"
+echo $cmd
+$cmd
