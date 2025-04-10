@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=4         ## 單個任務請求n 個 CPU
 #SBATCH --ntasks-per-node=3        ## 一個node 跑幾個task
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=development         ## 測試分區
+#SBATCH --partition=arm144         ## 測試分區
 
 
 ### 模組載入 (根據叢集需求)
