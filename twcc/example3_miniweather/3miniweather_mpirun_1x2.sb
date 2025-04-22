@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH --job-name=T2MiniW
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=4
+#SBATCH --account="GOV113038"
+#SBATCH --partition=gp1d
+#SBATCH --output=z_3slurm-miniweather.log
+#SBATCH --error=z_3slurm-miniweather.log
+
+module purge
+module load openmpi/5.0.2_ucx1.14.1_cuda12.3
+
+SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
+SINGULARITY="singularity run --nv $SIF"
+
+export OMPI_MCA_btl_tcp_if_include=ib0
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=self,tcp
+export PMIX_MCA_gds=^ds12
+export OMPI_MCA_btl_base_warn_component_unused=0
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
+export OMPI_MCA_rmaps_base_mapping_policy=slot
+export OMPI_MCA_hwloc_base_binding_policy=none
+export OMPI_MCA_mpi_leave_pinned=true
+export OMPI_MCA_rmaps_base_oversubscribe=true
+
+echo "==============================="
+echo "Running 2 GPU test"
+echo "==============================="
+
+cmd="env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun -np 2 ./largeweather_openacc"  # work but slow 
+# cmd="env CUDA_VISIBLE_DEVICES=0,1 mpirun -np 2 --map-by ppr:1:node --bind-to none $SINGULARITY ./largeweather_openacc" # not work
+echo $cmd
+$cmd

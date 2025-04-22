@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH --job-name=T2MiniW_2n
+#SBATCH --nodes=2                        ## 要 2 個節點
+#SBATCH --ntasks-per-node=2             ## 每個節點跑 2 個 task（對應 2 GPU）
+#SBATCH --gres=gpu:2                    ## 每個節點 2 張 GPU
+#SBATCH --cpus-per-task=4               ## 每個 task 使用 4 顆 CPU
+#SBATCH --account="GOV113038"
+#SBATCH --partition=gp1d
+#SBATCH --output=z_4nodes-miniweather.log
+#SBATCH --error=z_4nodes-miniweather.log
+
+# 載入模組
+module purge
+# module load singularity # failed
+module load openmpi/5.0.2_ucx1.14.1_cuda12.3
+
+# Container 位置
+SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
+SINGULARITY="singularity run --nv $SIF"
+
+# 環境變數
+export OMPI_MCA_btl_tcp_if_include=ib0
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=self,tcp
+export PMIX_MCA_gds=^ds12
+export OMPI_MCA_btl_base_warn_component_unused=0
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
+export OMPI_MCA_rmaps_base_mapping_policy=slot
+export OMPI_MCA_hwloc_base_binding_policy=none
+export OMPI_MCA_mpi_leave_pinned=true
+export OMPI_MCA_rmaps_base_oversubscribe=true
+
+# GPU 數量（這是單一節點的 GPU 數）
+NGPU=$(nvidia-smi -L | wc -l)
+
+echo "==============================="
+echo "Running 2-node test with $SLURM_NTASKS total ranks"
+echo "Each node has $NGPU GPUs"
+echo "==============================="
+
+# 用 srun 跨節點啟動 container，每個 task 都進 container 跑 mpirun
+cmd="srun -N $SLURM_JOB_NUM_NODES --ntasks-per-node=2 --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun ./largeweather_openacc"
+
+echo $cmd
+$cmd
