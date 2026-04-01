@@ -1,8 +1,9 @@
 #!/bin/bash
-
+echo ""
+echo ""
 echo "==============================="
-echo "       節點資訊 :  $(hostname)"
-echo "==============================="
+echo "  hi 計算節點來了 :  $(hostname)"
+echo "======($(hostname) 開始)======"
 echo " * . GPU 資源檢查"
 echo "-----------------"
 echo "SLURM_JOB_GPUS=$SLURM_JOB_GPUS"
@@ -17,10 +18,7 @@ echo " * . SLURM 環境參數"
 echo "-----------------"
 env | grep SLURM
 
-echo "-----------------"
-echo " * . 所有環境變數"
-echo "-----------------"
-env
-
 echo "檢查完成！"
-echo "==============================="
+echo "=====($(hostname) 結束)======"
+echo ""
+echo ""

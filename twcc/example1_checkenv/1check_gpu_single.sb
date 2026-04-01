@@ -1,17 +1,15 @@
 #!/bin/bash
-#SBATCH -A GOV113038               ## 錢包id
+#SBATCH -A GOV113119               ## 錢包id
 #SBATCH --job-name=check_gpu       ## 工作名稱
 #SBATCH --output=z_1check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
 #SBATCH --error=z_1check.log  ## 標準錯誤輸出記錄同一檔案
 #SBATCH --nodes=2                ## 請求n個節點
-#SBATCH --gres=gpu:8              ## 請求n張GPU
-#SBATCH --cpus-per-task=32         ## 單個任務請求n 個 CPU
+#SBATCH --gres=gpu:3              ## 請求n張GPU
+#SBATCH --cpus-per-task=12         ## 在TWCC上 GPU:CPU 比例，1:4
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest         ## 測試分區
+#SBATCH --partition=gtest         ## 測試分區 gtest, gp1d, gp2d, gp4d
 
 # 載入必要的模組 (根據叢集需求)
-module purge
-module load singularity
 
 # 開始記錄
 echo "==============================="
@@ -36,3 +34,5 @@ env | grep SLURM
 
 echo "==============================="
 echo "檢查完成！"
+echo "==============================="
+echo "說明：此腳本雖申請2 nodes，但以上指令其實並沒有呼叫"平行計算指令"，因此只有一個節點(Master)會執行，就結束了。"

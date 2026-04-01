@@ -1,37 +1,53 @@
 #!/bin/bash
-#SBATCH -A GOV113038              ## 錢包id
-#SBATCH --job-name=check_env3       ## 工作名稱
-#SBATCH --output=z_3check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
-#SBATCH --error=z_3check_env.log  ## 標準錯誤輸出記錄同一檔案
-#SBATCH --nodes=1                 ## 請求n個節點
-#SBATCH --gres=gpu:1              ## 請求n張 GPU
-#SBATCH --cpus-per-task=4         ## 單個任務請求 n 個 CPU
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --job-name=check_gpu       ## 工作名稱
+#SBATCH --output=z_3check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_3check.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                ## 請求n個節點
+#SBATCH --gres=gpu:3              ## 請求n張GPU
+#SBATCH --cpus-per-task=12         ## 在TWCC上 GPU:CPU 比例，1:4
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest        ## 測試分區
+#SBATCH --partition=gp2d         ## 測試分區 gtest, gp1d, gp2d, gp4d
 
 
 # 模組載入 (根據叢集需求)
 module purge
 module load singularity
 
-# sif
-SIF=/work/waue0920/open_access/yolo9t2_ngc2306.sif
-SINGULARITY="singularity run --nv $SIF"
+# 切換目錄防呆 (若從上層目錄遞交 job，找不到腳本時切換)
+if [ ! -f "env.py" ] && [ -d "example1_checkenv" ]; then
+    cd example1_checkenv
+fi
 
-# defind master
+
+echo "=========Master ($hosname)=============="
+# 取得必要節點與 GPU 資訊
 MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
 export MASTER_ADDR
 
-## twcc 不知為何SLURM_GPUS_ON_NODE 為空
-nvidia-smi --list-gpus
-NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
+## TWCC 預設的 SLURM_GPUS_ON_NODE 常會抓不到，這裡用 nvidia-smi 替代防呆
+NGPU=$(nvidia-smi -L | wc -l)
 export NGPU
 
-echo "==============================="
+### 選擇執行環境 (以下三種方法請選擇一種取消註解，預設展示方法三)
 
-## 呼叫 yolo train torchrun 版本
-# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
+### 方法一： 先啟動 Conda 環境，再用絕對路徑呼叫 Python
+# eval "$(conda shell.bash hook)"
+# conda activate yolo9t2
+# cmd="srun --gres=gpu:$NGPU --mpi=pmix $(which python) env.py"
 
-cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY bash run_python.sh"
+### 方法二： 使用 Singularity 容器環境
+# SIF=/work/waue0920/open_access/yolo9t2_ngc2306.sif
+# SINGULARITY="singularity run --nv $SIF"
+# cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY python env.py"
+
+### 方法三： 使用 conda run (推薦，最簡潔的 conda 跨節點執行方式)
+# 透過 conda run 直接指定環境名稱，不用修改當前 shell 狀態，能最穩定傳遞給 srun 所有運算節點
+cmd="srun --gres=gpu:$NGPU --mpi=pmix $(which conda) run -n yolo9t2 python env.py"
+
+
+### 執行腳本
 echo $cmd
+
+echo "==============================="
 $cmd

@@ -1,23 +1,26 @@
 #!/bin/bash
-#SBATCH -A GOV113038
+#SBATCH -A GOV113119               ## 錢包id
 #SBATCH --job-name=check_gpu       ## 工作名稱
-#SBATCH --output=z_2check_env.log ## 標準輸出與錯誤輸出同時記錄到此檔案
-#SBATCH --error=z_2check_env.log  ## 標準錯誤輸出記錄同一檔案
-#SBATCH --nodes=2                 ## 請求n個節點
-#SBATCH --gres=gpu:4              ## 請求n張 GPU
-#SBATCH --cpus-per-task=16         ## 單個任務請求 n 個 CPU
+#SBATCH --output=z_2check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_2check.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=2                ## 請求n個節點
+#SBATCH --gres=gpu:3              ## 請求n張GPU
+#SBATCH --cpus-per-task=12         ## 在TWCC上 GPU:CPU 比例，1:4
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gp2d         ## 測試分區
-
+#SBATCH --partition=gtest         ## 測試分區 gtest, gp1d, gp2d, gp4d
 
 # 模組載入 (根據叢集需求)
 module purge
 module load singularity
 
-
+# 切換目錄防呆 (若從上層目錄遞交 job，找不到 env.sh 時切換)
+if [ ! -f "env.sh" ] && [ -d "example1_checkenv" ]; then
+    cd example1_checkenv
+fi
+echo ""
 echo "==============================="
-echo "BatchNode :   $(hostname)"
-echo "==============================="
+echo "Hi 我是Master節點 :   $(hostname)"
+echo "===========(Master 開始)============"
 echo " 
 
 * GPU 資源檢查"
@@ -28,16 +31,12 @@ echo ""
 echo "可用 GPU 檢查 (nvidia-smi)"
 nvidia-smi --list-gpus
 
-
-echo "==============================="
 # 執行 `env.sh`，將環境資訊記錄到 log
 
-## * 這指令未帶入gpu 資源
-# srun --mpi=pmix $SINGULARITY bash env.sh
-
-## * 這指令在 t2 會錯誤， H100可執行，因為 $SLURM_GPUS_ON_NODE 
-# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix  bash env.sh
-
-## * 這指令要解決 t2 上沒有 $SLURM_GPUS_ON_NODE 而做
 NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
-srun --gres=gpu:$NGPU --mpi=pmix  bash env.sh
+
+# 從這步之前，所有指令都在 Master 節點執行
+echo "===========(Master 結束)============"
+echo ""
+# 從這步開始，才會去呼叫所有節點來執行指定的程式
+srun --gres=gpu:$NGPU --mpi=pmix bash env.sh
