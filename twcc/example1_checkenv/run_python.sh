@@ -1,7 +1,8 @@
 #!/bin/bash
 
 ### 參數設定區 ###
-WORKDIR=~/nchc_hpc_slurm_example/twcc/example1_checkenv
+#WORKDIR=~/nchc_hpc_slurm_example/twcc/example1_checkenv
+WORKDIR=./
 
 ## 工作目錄
 HOSTNAME=$(hostname | cut -d '.' -f 1)

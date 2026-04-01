@@ -65,9 +65,9 @@ echo "==================="
 
 ### 執行訓練命令 ###
 ## 超參數設定
-NBatch=256    # v100 超過 254會failed
+NBatch=32    # v100 超過 254會failed
 NEpoch=50       # 約 20 mins / per Epoch
-NWorker=16       # cpu = gpu x 4, worker < cpu
+NWorker=8       # cpu = gpu x 4, worker < cpu
 
 
 ## 訓練 segment/train_dual.py 命令 (動態設置 nproc_per_node 和 nnodes)
