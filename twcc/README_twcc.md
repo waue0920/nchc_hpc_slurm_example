@@ -1,7 +1,8 @@
 # 導引
-* example1/ : slurm scripts executing with python  
-* example2/ : slurm scripts that perform project yolov9
-* yolov9/   : yolov9 project that you need prepare program, data, pretrained_pt by yourself.
+* example1_checkenv/     : slurm scripts executing with python (基礎環境檢查)
+* example2_yolov9/       : slurm scripts that perform project yolov9 (PyTorch, torchrun)
+* example3_miniweather/  : slurm scripts that perform MPI + OpenACC testing (Singularity, 編譯與平行運算)
+* yolov9/                : yolov9 project that you need prepare program, data, pretrained_pt by yourself.
 
 
 # QuickStart
@@ -102,10 +103,16 @@ sbatch example1_checkenv/4check_sh_py.sb
 ```
 
 
-## 4. 真實範例
+## 4. GPU 範例 PyTorch torchrun
 
+### YOLOv9 (PyTorch 分散式訓練)
+詳見 [example2_yolov9/README_example2_yolov9.md](example2_yolov9/README_example2_yolov9.md)。
 
-詳見 [example2_yolov9/README.md](example2_yolov9/README.md)。
+利用前面 1~3 節學到的技巧，我們將實際執行 YOLOv9 的「物件偵測」(Object Detection) 與「實例分割」(Instance Segmentation) 訓練。展示了「硬體資源申請腳本 (.sb)」與「執行環境配置腳本 (.sh)」分離的完美架構，並支援了多節點的分散式運算 (`torchrun`)。
 
-利用前面 1~3 節學到的技巧，我們將實際執行 YOLOv9 的「物件偵測」(Object Detection) 與「實例分割」(Instance Segmentation) 訓練。
-展示了「硬體資源申請腳本 (.sb)」與「執行環境配置腳本 (.sh)」分離的完美架構，並支援了多節點的分散式運算。
+## 5. CPU 範例 MPI or OpenACC
+
+### MiniWeather (MPI + OpenACC 容器化高效能編譯與運算)
+詳見 [example3_miniweather/README_example3_miniweather.md](example3_miniweather/README_example3_miniweather.md)。
+
+本範例展示了在 TWCC 環境下使用 Singularity 中原生的 NVHPC (MPI + OpenACC) 框架，針對需要高效能編譯 C++/Fortran 環境的任務所做出的規劃。展示了如何利用互動式節點 (`salloc`) 或提交自動編譯腳本，並教導如何正確使用 主機端的 `srun` 外包裝取代傳統進入容器執行 `mpirun` 的最佳實踐策略 (避免 `ORTE` 通訊崩潰)。

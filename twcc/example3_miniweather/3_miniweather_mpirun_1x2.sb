@@ -1,14 +1,19 @@
 #!/bin/bash
+#SBATCH --job-name=T2MiniW
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=4
+#SBATCH --account=GOV113119
+#SBATCH --partition=gp1d
+#SBATCH --output=z_3slurm-miniweather.log
+#SBATCH --error=z_3slurm-miniweather.log
 
-# 環境設定
 module purge
-module load singularity || true
+module load openmpi/5.0.2_ucx1.14.1_cuda12.3
 
-# SIF路徑
 SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
 SINGULARITY="singularity run --nv $SIF"
 
-# MPI 環境變數配置
 export OMPI_MCA_btl_tcp_if_include=ib0
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=self,tcp
@@ -20,15 +25,11 @@ export OMPI_MCA_hwloc_base_binding_policy=none
 export OMPI_MCA_mpi_leave_pinned=true
 export OMPI_MCA_rmaps_base_oversubscribe=true
 
-# 計算節點 GPU Fallback
-NGPU=${SLURM_GPUS_ON_NODE:-$(nvidia-smi -L | wc -l)}
-echo "Number of GPUs on node: $NGPU"
-echo "Number of nodes: $SLURM_JOB_NUM_NODES"
-
 echo "==============================="
-echo "Running srun version with 2 GPU tasks (hugeweather_openacc)"
+echo "Running 2 GPU test"
 echo "==============================="
 
-cmd="srun -N $SLURM_JOB_NUM_NODES --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun ./hugeweather_openacc"
+cmd="env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun -np 2 ./largeweather_openacc"  # work but slow 
+# cmd="env CUDA_VISIBLE_DEVICES=0,1 mpirun -np 2 --map-by ppr:1:node --bind-to none $SINGULARITY ./largeweather_openacc" # not work
 echo $cmd
 $cmd

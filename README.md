@@ -9,6 +9,17 @@
 *   **f1/**: 創進一號 (x86-64) 範例，適用於標準高效能運算任務。
 *   **f1_arm/**: 創進一號 (ARM64) 範例，針對 ARM 架構進行優化的運算腳本。
 
+## 0. 開發環境須知 (Interactive Development Environment)
+
+在開始任何操作之前，請務必先閱讀本目錄下的 [AGENTS.md](AGENTS.md)（國網中心 HPC AI 助理指示），裡面載明了多項重要的 HPC 使用規範，例如「**嚴禁在登入節點直接執行運算或編譯腳本**」以及「`.sb` 與 `.sh` 檔案的職責分離原則」。
+
+如果你不想透過 `sbatch` 提交排程（背景執行），而是想要一個可以即時除錯、編譯程式的環境，這是一個**萬用方法**：使用 `salloc` 指令向 SLURM 申請一個互動式的**開發環境**（進入計算節點）：
+
+```bash
+salloc --nodes=1 --cpus-per-task=4 --gres=gpu:1 --partition=gtest --time=01:00:00 bash
+# 成功分配並進入計算節點後，你就可以直接在上面執行 .sh 腳本碼進行編譯與測試，絕對不會佔用到登入節點的資源！
+```
+
 ## 目錄結構與範例說明
 
 每個叢集目錄下通常包含以下三個階段的範例：
@@ -23,11 +34,17 @@
 
 ## 快速開始
 
-### 1. 修改帳號與分區
-在使用 `.sb` (Slurm Batch) 腳本前，請務必根據您的計畫修改帳號與分區：
+### 1. 必填的 SLURM 參數 (計畫帳號、分區與 GPU)
+在使用 `.sb` (Slurm Batch) 腳本前，有幾個關鍵參數**絕對不能漏掉**：
+
+* **計畫帳號 (`-A` 或 `--account=`)**：必須填寫您所屬的計畫代碼。如果不清楚自己的計畫 ID，可以在終端機輸入 `wallet` 指令來查詢。
+* **計算分區 (`-p` 或 `--partition=`)**：一定要指定且必須對齊該平台的可用分區，詳情請參考 [hpc_partitions.md](hpc_partitions.md)。
+* **GPU 資源 (`--gres=gpu:N`)**：只要您使用的平台或分區提供 GPU 運算 (例如 TWCC 或 H100)，就**務必**宣告請求的 GPU 數量，否則會因為 `Missing assigned gpus` 被系統直接拒絕。
+
 ```bash
-#SBATCH --account="GOV113038"    # 請替換為您的計畫帳號 (如: GOV113038 或 GOV113119)
-#SBATCH --partition=gtest        # 根據叢集選擇正確的分區 (如: gtest, gp2d, dev, ct112)
+#SBATCH -A GOV113119             # 請替換為用 wallet 查到的計畫帳號
+#SBATCH --partition=gtest        # 選擇當前平台支援的正確分區名稱
+#SBATCH --gres=gpu:1             # (限 GPU 平台) 務必指定 GPU 請求張數
 ```
 
 ### 2. 派送任務

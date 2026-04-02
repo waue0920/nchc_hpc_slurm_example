@@ -1,0 +1,60 @@
+#!/bin/bash
+#SBATCH --job-name=T2MiniW_2n
+#SBATCH --nodes=2                        ## 要 2 個節點
+#SBATCH --ntasks-per-node=2             ## 每個節點跑 2 個 task（對應 2 GPU）
+#SBATCH --gres=gpu:2                    ## 每個節點 2 張 GPU
+#SBATCH --cpus-per-task=4               ## 每個 task 使用 4 顆 CPU
+#SBATCH --account=GOV113119
+#SBATCH --partition=gp1d
+#SBATCH --output=z_4nodes-miniweather.log
+#SBATCH --error=z_4nodes-miniweather.log
+
+# 載入模組
+module purge
+# module load singularity # failed
+module load openmpi/5.0.2_ucx1.14.1_cuda12.3
+
+# Container 位置
+SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
+SINGULARITY="singularity run --nv $SIF"
+
+# 環境變數
+export OMPI_MCA_btl_tcp_if_include=ib0
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=self,tcp
+export PMIX_MCA_gds=^ds12
+export OMPI_MCA_btl_base_warn_component_unused=0
+export OMPI_MCA_btl_vader_single_copy_mechanism=none
+export OMPI_MCA_rmaps_base_mapping_policy=slot
+export OMPI_MCA_hwloc_base_binding_policy=none
+export OMPI_MCA_mpi_leave_pinned=true
+export OMPI_MCA_rmaps_base_oversubscribe=true
+
+# GPU 數量（這是單一節點的 GPU 數）
+NGPU=$(nvidia-smi -L | wc -l)
+
+echo "==============================="
+echo "Running 2-node test with $SLURM_NTASKS total ranks"
+echo "Each node has $NGPU GPUs"
+echo "==============================="
+
+# 【錯誤示範說明】 (反面教材)
+# 為什麼下面這行會報錯 (如 opal_init:startup:internal-failure 或 ORTE/PMIX 錯誤)？
+# 1. 巢狀執行 (Nested Launch)：外層已經用 `srun` 展開了多節點/多任務的程序，但進到 Singularity 容器內後，
+#    竟然又呼叫了一次 `mpirun`。這會導致每個 srun task 都試圖自己再拉起一個完整的 MPI 通訊群組。
+# 2. 喪失 SLURM 環境視野：Singularity 容器內部並沒有安裝 SLURM deamon (如 srun/sbatch)，
+#    因此當內部 `mpirun` 試圖跨節點尋找其他 process 時會迷失方向，無法正確與外部的拓墣結構對接。
+# (以下保留原始錯誤的寫法供除錯與觀察報錯用)
+cmd="srun -N $SLURM_JOB_NUM_NODES --ntasks-per-node=2 --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun ./largeweather_openacc"
+
+# 【正確做法】(Outside-in 架構)
+# 應該由「外部 (Host端)」的 srun 搭配 --mpi=pmix 來負責派發任務與管理節點：
+# 每一份被派發的 task，單純只是去「喚醒 Singularity 容器並執行那支編譯好的程式」，
+# 把 mpirun 拔掉，交給外頭的 srun 控制即可。
+#
+# 正確寫法參考 (不要寫 mpirun)：
+# cmd="srun -N $SLURM_JOB_NUM_NODES --ntasks-per-node=2 --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest $SINGULARITY ./largeweather_openacc"
+
+
+echo $cmd
+$cmd

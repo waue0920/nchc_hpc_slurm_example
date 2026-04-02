@@ -1,13 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name=BuildMiniW
+#SBATCH -A GOV113119               ## 錢包id
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:1
 #SBATCH --partition=gtest
 #SBATCH --output=z_build_openacc.log
+
 
 SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 cd "$SCRIPT_DIR/.."
 
 # 呼叫 sh 檔執行實際的編譯動作
-srun --label bash setup_scripts/2_build_openacc.sh
+srun bash setup_scripts/2_build_openacc.sh

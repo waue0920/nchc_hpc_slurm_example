@@ -1,22 +1,19 @@
 #!/bin/bash
 #SBATCH --job-name=T2MiniW      ## Job 名稱
-#SBATCH -A GOV113119               ## 計畫 ID
 #SBATCH --mail-type=ALL            ## 收到通知條件
 #SBATCH --mail-user=waue0920@gmail.com
 #SBATCH --nodes=1                  ## 索取 x 個節點
-#SBATCH --cpus-per-task=4          ## 每個 task 索取 x 顆 CPU
-#SBATCH --gres=gpu:1               ## 每個節點索取 x 張 GPU
+#SBATCH --cpus-per-task=8          ## 每個 task 索取 x 顆 CPU
+#SBATCH --gres=gpu:2               ## 每個節點索取 x 張 GPU
+#SBATCH --account=GOV113119
 #SBATCH --partition=gtest           ## 使用測試 queue
-#SBATCH --output=z_1slurm-miniweather.log  ## 將標準輸出記錄到 log
-#SBATCH --error=z_1slurm-miniweather.log   ## 將錯誤輸出記錄到同一個 log
+#SBATCH --output=z_2slurm-hugeweather.log  ## 將標準輸出記錄到 log
+#SBATCH --error=z_2slurm-hugeweather.log   ## 將錯誤輸出記錄到同一個 log
 
-SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
-SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-cd "$SCRIPT_DIR"
 
 # needed in H100
 module purge
-module load singularity
+#module load singularity
 
 # sif
 SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
@@ -35,14 +32,19 @@ export OMPI_MCA_mpi_leave_pinned=true
 export OMPI_MCA_rmaps_base_oversubscribe=true
 
 
-NGPU=${SLURM_GPUS_ON_NODE:-$(nvidia-smi -L | wc -l)}
+NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
 echo "Number of GPUs on node: $NGPU"
 echo "Number of nodes: $SLURM_JOB_NUM_NODES"
 
 
 echo "==============================="
+echo "Running srun version with 2 tasks"
+echo "==============================="
+
+# 使用 srun 啟動每個 MPI rank，每個都跑 container，執行 binary
+## srun singularity run --nv $SIF ./largeweather_openacc  ## not work 因為仔入錯的環境
 
 
-cmd="srun -N $SLURM_JOB_NUM_NODES --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0 $SINGULARITY mpirun ./largeweather_openacc"
+cmd="srun -N $SLURM_JOB_NUM_NODES --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0,1 $SINGULARITY mpirun ./hugeweather_openacc"
 echo $cmd
 $cmd

@@ -41,8 +41,11 @@ MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
 MASTER_PORT=$(( 10000 + (${SLURM_JOB_ID:-9527} % 50000) ))
 ```
 
-## 5. 各平台分區 (Partition) 設定
-請優先參考工作區內的 [hpc_partitions.md](hpc_partitions.md) 檔案，為你在撰寫 `.sb` 時提供各平台的 `#SBATCH --partition` 正確名稱參考。確保針對不同的叢集使用正確的分區。
+## 5. 各平台分區 (Partition) 設定與必備參數
+在撰寫 `.sb` 排程腳本時，有許多參數是**絕對不能漏掉的**，否則 SLURM 會直接拒絕接受任務：
+- **計畫帳號 (Account ID)**：必須指定 `#SBATCH -A <計畫ID>` (或 `--account=`)，例如 `-A GOV113119`。
+- **GPU 數量 (-gres=gpu:N)**：只要使用的 Partition 帶有 GPU（如 `gtest`, `gp1d` 等），必須加上 `#SBATCH --gres=gpu:N`。
+請優先參考工作區內的 [hpc_partitions.md](hpc_partitions.md) 檔案，為你在撰寫 `.sb` 時提供各平台的 `#SBATCH --partition` 正確名稱參考。確保針對不同的叢集使用正確的分區與上述必備參數。
 
 ## 6. 使用工具的限制
 - **未經使用者明確同意，請勿擅自使用終端機工具執行 `sbatch` 指令。** 提交任務至資源池會消耗使用者的計費額度 (Credits)，請讓使用者自己去執行這些送出任務的指令。
