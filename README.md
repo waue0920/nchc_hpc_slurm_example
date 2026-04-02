@@ -5,7 +5,7 @@
 ## 叢集環境介紹
 
 *   **twcc/**: 台灣衫二號 (T2) 範例，適用於多 GPU 雲端運算環境。
-*   **h100/**: 晶創主機 (Nano5) 範例，針對 NVIDIA H100 GPU 優化。
+*   **n5/**: 晶創主機 (Nano5) 範例，針對 NVIDIA H100 GPU 優化。
 *   **f1/**: 創進一號 (x86-64) 範例，適用於標準高效能運算任務。
 *   **f1_arm/**: 創進一號 (ARM64) 範例，針對 ARM 架構進行優化的運算腳本。
 
@@ -39,7 +39,7 @@ salloc --nodes=1 --cpus-per-task=4 --gres=gpu:1 --partition=gtest --time=01:00:0
 
 * **計畫帳號 (`-A` 或 `--account=`)**：必須填寫您所屬的計畫代碼。如果不清楚自己的計畫 ID，可以在終端機輸入 `wallet` 指令來查詢。
 * **計算分區 (`-p` 或 `--partition=`)**：一定要指定且必須對齊該平台的可用分區，詳情請參考 [hpc_partitions.md](hpc_partitions.md)。
-* **GPU 資源 (`--gres=gpu:N`)**：只要您使用的平台或分區提供 GPU 運算 (例如 TWCC 或 H100)，就**務必**宣告請求的 GPU 數量，否則會因為 `Missing assigned gpus` 被系統直接拒絕。
+* **GPU 資源 (`--gres=gpu:N`)**：只要您使用的平台或分區提供 GPU 運算 (例如 TWCC 或 Nano5)，就**務必**宣告請求的 GPU 數量，否則會因為 `Missing assigned gpus` 被系統直接拒絕。
 
 ```bash
 #SBATCH -A GOV113119             # 請替換為用 wallet 查到的計畫帳號

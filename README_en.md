@@ -5,7 +5,7 @@ This repository provides a collection of SLURM batch script examples tailored fo
 ## Supported Clusters
 
 *   **twcc/**: Examples for Taiwania 2 (T2), suitable for multi-GPU cloud computing.
-*   **h100/**: Examples for Nano5 (H100), optimized for NVIDIA H100 GPU workloads.
+*   **n5/**: Examples for Nano5 (H100), optimized for NVIDIA H100 GPU workloads.
 *   **f1/**: Examples for F1 (x86-64), suitable for standard HPC tasks.
 *   **f1_arm/**: Examples for F1 (ARM64), experimental scripts for ARM-based architectures.
 
