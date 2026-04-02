@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH -A GOV113119
+#SBATCH --job-name=test_pwd
+#SBATCH --output=test_pwd.log
+#SBATCH --nodes=1
+#SBATCH --time=00:01:00
+#SBATCH --partition=gtest
+
+echo "1. Current pwd: \$(pwd)"
+echo "2. SLURM_SUBMIT_DIR: \$SLURM_SUBMIT_DIR"
+echo "3. \$0 value: \$0"
+echo "4. dirname \$0: \$(dirname "\$0")"
+SCRIPT_DIR=\$(cd "\$(dirname "\$0")" && pwd)
+echo "5. SCRIPT_DIR result: \$SCRIPT_DIR"

@@ -1,38 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=T2Yolo9Sn1    ## Job 名稱
-#SBATCH --mail-type=ALL            ## 收到通知條件
-#SBATCH --mail-user=waue0920@gmail.com
-#SBATCH --nodes=1                  ## 索取 x 個節點
-#SBATCH --cpus-per-task=32          ## 每個 task 索取 x 顆 CPU
-#SBATCH --gres=gpu:8               ## 每個節點索取 x 張 GPU
-#SBATCH --account="GOV113038"      ## iService_ID 計畫 ID
-#SBATCH --partition=gp4d          ## 使用測試 queue
+#SBATCH --job-name=T2Yolo9_2      ## Job 名稱
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --nodes=2                  ## 請求n個節點
+#SBATCH --gres=gpu:4               ## 請求n張GPU
+#SBATCH --cpus-per-task=16         ## 在TWCC上 GPU:CPU 比例，1:4
+#SBATCH --time=00:10:00            ## 最長執行時間 n 分鐘
+#SBATCH --partition=gtest           ## 測試分區 gtest, gp1d, gp2d, gp4d
 #SBATCH --output=z_2slurm-yolo9_segment_local.log  ## 將標準輸出記錄到 log
 #SBATCH --error=z_2slurm-yolo9_segment_local.log   ## 將錯誤輸出記錄到同一個 log
 
+# 動態解析這個 .sb 腳本的絕對路徑與所在的目錄
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
-# needed in H100
-module purge
-module load singularity
+echo "=========Master: $(hostname)=============="
+cd "$SCRIPT_DIR" || exit 1
 
-# sif
-SIF=/work/waue0920/open_access/yolo9t2_ngc2306_20241226.sif
-SINGULARITY="singularity run --nv $SIF"
-
-# defind master
-MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
-export MASTER_ADDR
-
-## twcc 不知為何SLURM_GPUS_ON_NODE 為空
-nvidia-smi --list-gpus
-NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
-export NGPU
-
-echo "==============================="
-
-## 呼叫 yolo train torchrun 版本
-# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
-
-cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY bash yolotrain_segment_local.sh"
-echo $cmd
-$cmd
+# 為了除錯，加上 --label 可以看到每一行輸出是來自哪個 Node 輸出的
+command="srun --label bash yolotrain_segment_local.sh"
+echo "$command"
+$command

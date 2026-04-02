@@ -8,3 +8,8 @@ node*/
 done*/
 test*/
 backup*/
+yolov9/
+*.pt
+# miniweather artifacts
+largeweather_*
+hugeweather_*

@@ -10,17 +10,14 @@
 #SBATCH --partition=gp2d         ## 測試分區 gtest, gp1d, gp2d, gp4d
 
 
-# 模組載入 (根據叢集需求)
-module purge
-module load singularity
+### 切換到腳本所在目錄 ###
+# 由於 SLURM 執行時 $0 會變成暫存目錄，而 $SLURM_SUBMIT_DIR 是 sbatch 執行的所在目錄
+# 最穩定的方式是透過 scontrol 詢問此 JOB 的實際指令檔絕對路徑
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
 
-# 切換目錄防呆 (若從上層目錄遞交 job，找不到腳本時切換)
-if [ ! -f "env.py" ] && [ -d "example1_checkenv" ]; then
-    cd example1_checkenv
-fi
-
-
-echo "=========Master ($hosname)=============="
+echo "=========Master: $(hostname)=============="
 # 取得必要節點與 GPU 資訊
 MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
 export MASTER_ADDR
@@ -32,22 +29,22 @@ export NGPU
 ### 選擇執行環境 (以下三種方法請選擇一種取消註解，預設展示方法三)
 
 ### 方法一： 先啟動 Conda 環境，再用絕對路徑呼叫 Python
-# eval "$(conda shell.bash hook)"
-# conda activate yolo9t2
-# cmd="srun --gres=gpu:$NGPU --mpi=pmix $(which python) env.py"
+eval "$(conda shell.bash hook)"
+conda activate yolo9t2
+cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which python) env.py"
 
 ### 方法二： 使用 Singularity 容器環境
 # SIF=/work/waue0920/open_access/yolo9t2_ngc2306.sif
 # SINGULARITY="singularity run --nv $SIF"
-# cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY python env.py"
+# cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $SINGULARITY python env.py"
 
 ### 方法三： 使用 conda run (推薦，最簡潔的 conda 跨節點執行方式)
-# 透過 conda run 直接指定環境名稱，不用修改當前 shell 狀態，能最穩定傳遞給 srun 所有運算節點
-cmd="srun --gres=gpu:$NGPU --mpi=pmix $(which conda) run -n yolo9t2 python env.py"
+# cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which conda) run -n yolo9t2 python env.py"
 
 
-### 執行腳本
+### 腳本檢查
 echo $cmd
-
-echo "==============================="
+echo "=========Master: $(hostname)=============="
+echo ""
+### 執行腳本
 $cmd

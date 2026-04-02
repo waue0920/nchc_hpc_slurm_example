@@ -7,16 +7,24 @@
 #SBATCH --gres=gpu:3              ## 請求n張GPU
 #SBATCH --cpus-per-task=12         ## 在TWCC上 GPU:CPU 比例，1:4
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest         ## 測試分區 gtest, gp1d, gp2d, gp4d
+#SBATCH --partition=gp1d         ## 測試分區 gtest, gp1d, gp2d, gp4d
 
-# 模組載入 (根據叢集需求)
-module purge
-module load singularity
-
-# 切換目錄防呆 (若從上層目錄遞交 job，找不到 env.sh 時切換)
+### slurm 踩坑1 : 路徑切換。
+### sbatch 執行時最好跟當前腳本在一起。如果不在一起就要cd 切換正確
+### 切換方法1
 if [ ! -f "env.sh" ] && [ -d "example1_checkenv" ]; then
     cd example1_checkenv
 fi
+
+### 切換方法2 使用scontrol自動判定
+# 由於 SLURM 執行時 $0 會變成暫存目錄，而 $SLURM_SUBMIT_DIR 是 sbatch 執行的所在目錄
+# 最穩定的方式是透過 scontrol 詢問此 JOB 的實際指令檔絕對路徑
+# SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+# SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+# cd "$SCRIPT_DIR"
+
+### 開始執行
+
 echo ""
 echo "==============================="
 echo "Hi 我是Master節點 :   $(hostname)"

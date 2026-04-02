@@ -4,45 +4,27 @@
 #SBATCH --output=z_4check.log      ## 標準輸出與錯誤輸出同時記錄到此檔案
 #SBATCH --error=z_4check.log       ## 標準錯誤輸出記錄同一檔案
 #SBATCH --nodes=2                  ## 請求n個節點
-#SBATCH --gres=gpu:3              ## 請求n張GPU
+#SBATCH --gres=gpu:3               ## 請求n張GPU
 #SBATCH --cpus-per-task=12         ## 在TWCC上 GPU:CPU 比例，1:4
-#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=gp2d         ## 測試分區 gtest, gp1d, gp2d, gp4d
+#SBATCH --time=00:10:00            ## 最長執行時間 n 分鐘
+#SBATCH --partition=gp2d           ## 測試分區 gtest, gp1d, gp2d, gp4d
 
 
-# 模組載入 (根據叢集需求)
-module purge
-module load singularity
+### 切換到腳本所在目錄 ###
+# 由於 SLURM 執行時 $0 會變成暫存目錄，而 $SLURM_SUBMIT_DIR 是 sbatch 執行的所在目錄
+# 最穩定的方式是透過 scontrol 詢問此 JOB 的實際指令檔絕對路徑
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
 
-# 切換目錄防呆 (若從上層目錄遞交 job，找不到腳本時切換)
-if [ ! -f "run_python.sh" ] && [ -d "example1_checkenv" ]; then
-    cd example1_checkenv
-fi
+echo ""
+echo "=========Master: $(hostname)=============="
 
-### 選擇使用 python 的環境
-### (選項1) sif
-# SIF=/work/waue0920/open_access/yolo9t2_ngc2306.sif
-# SINGULARITY="singularity run --nv $SIF"
-
-### (選項2) conda 環境
-eval "$(conda shell.bash hook)"  # 自動找出你的conda 安裝位置，並載入環境
-conda activate yolo9t2
-SINGULARITY=""
-
-# defind master
-MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
-export MASTER_ADDR
-
-## twcc 不知為何SLURM_GPUS_ON_NODE 為空
-nvidia-smi --list-gpus
-NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
-export NGPU
-
-echo "==============================="
-
-## 呼叫 yolo train torchrun 版本
-# srun --gres=gpu:$SLURM_GPUS_ON_NODE --mpi=pmix $SINGULARITY bash yolotrain_segment.sh # SLURM_GPUS_ON_NODE 只有H100上才有
-
-cmd="srun --gres=gpu:$NGPU --mpi=pmix $SINGULARITY bash run_python.sh"
+# 派發 run_python.sh 到所有節點執行
+cmd="srun --label bash run_python.sh"
 echo $cmd
+echo "=========Master: $(hostname)=============="
+echo ""
 $cmd
+
+

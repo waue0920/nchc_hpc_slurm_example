@@ -1,25 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=T2MiniW      ## Job 名稱
-#SBATCH --mail-type=ALL            ## 收到通知條件
-#SBATCH --mail-user=waue0920@gmail.com
-#SBATCH --nodes=1                  ## 索取 x 個節點
-#SBATCH --cpus-per-task=4          ## 每個 task 索取 x 顆 CPU
-#SBATCH --gres=gpu:1               ## 每個節點索取 x 張 GPU
-#SBATCH --account="GOV113038"      ## iService_ID 計畫 ID
-#SBATCH --partition=gp1d           ## 使用測試 queue
-#SBATCH --output=z_1slurm-miniweather.log  ## 將標準輸出記錄到 log
-#SBATCH --error=z_1slurm-miniweather.log   ## 將錯誤輸出記錄到同一個 log
 
-
-# needed in H100
+# 環境設定
 module purge
-module load singularity
+module load singularity || true
 
-# sif
+# SIF路徑
 SIF=/work/waue0920/open_access/miniweather_nvhpc_20250409.sif
 SINGULARITY="singularity run --nv $SIF"
 
-
+# MPI 環境變數配置
 export OMPI_MCA_btl_tcp_if_include=ib0
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=self,tcp
@@ -31,15 +20,14 @@ export OMPI_MCA_hwloc_base_binding_policy=none
 export OMPI_MCA_mpi_leave_pinned=true
 export OMPI_MCA_rmaps_base_oversubscribe=true
 
-
-NGPU=$(nvidia-smi -L | wc -l) # $SLURM_GPUS_ON_NODE
+# 計算節點 GPU Fallback (AGENTS.md rule)
+NGPU=${SLURM_GPUS_ON_NODE:-$(nvidia-smi -L | wc -l)}
 echo "Number of GPUs on node: $NGPU"
 echo "Number of nodes: $SLURM_JOB_NUM_NODES"
 
-
 echo "==============================="
 
-
+# 執行指令
 cmd="srun -N $SLURM_JOB_NUM_NODES --gres=gpu:$NGPU --mpi=pmix --gpus-per-task=1 --gpu-bind=closest env CUDA_VISIBLE_DEVICES=0 $SINGULARITY mpirun ./largeweather_openacc"
 echo $cmd
 $cmd

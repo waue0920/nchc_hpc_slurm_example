@@ -1,7 +1,11 @@
 import sys
 import os
+import socket
 
 def print_python_env():
+    hostname = socket.gethostname()
+    print("")
+    print(f"<{hostname}>")
     print("=== Python Environment Variables ===")
     print("\n1. Python Version:")
     print(sys.version)
@@ -20,6 +24,8 @@ def print_python_env():
     print(sys.prefix + '/lib/python' + sys.version[:3] + '/site-packages')
     print("\n8. USER_BASE (Pip --user Libraries):")
     print(os.path.expanduser('~/.local'))
+    print(f"</{hostname}>")
+    print("")
 
 if __name__ == "__main__":
     print_python_env()

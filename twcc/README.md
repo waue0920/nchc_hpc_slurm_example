@@ -94,3 +94,18 @@ sbatch example1_checkenv/3check_env_py.sb
   - 這支腳本進一步示範如何呼叫 **Singularity (Apptainer) 容器**。
   - 它建立了一個 `cmd="srun ... $SINGULARITY bash run_python.sh"` 變數字串來執行。這展現了我們在封排程腳本時，可以清楚將參數、容器與要執行的 Python 環境拆分與包裝。
   - 同時也示範了如何定義 `$MASTER_ADDR` 變數來抓取主要通訊節點位置（供未來分散式運算使用）。
+
+
+3. 4check_sh_py.sb
+```
+sbatch example1_checkenv/4check_sh_py.sb
+```
+
+
+## 4. 真實範例
+
+
+詳見 [example2_yolov9/README.md](example2_yolov9/README.md)。
+
+利用前面 1~3 節學到的技巧，我們將實際執行 YOLOv9 的「物件偵測」(Object Detection) 與「實例分割」(Instance Segmentation) 訓練。
+展示了「硬體資源申請腳本 (.sb)」與「執行環境配置腳本 (.sh)」分離的完美架構，並支援了多節點的分散式運算。

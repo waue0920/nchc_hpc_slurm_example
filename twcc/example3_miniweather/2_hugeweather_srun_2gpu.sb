@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --job-name=T2HugeW      ## Job 名稱
+#SBATCH --nodes=1                  ## 索取 x 個節點
+#SBATCH --cpus-per-task=8          ## 每個 task 索取 x 顆 CPU
+#SBATCH --gres=gpu:2               ## 每個節點索取 x 張 GPU
+#SBATCH --partition=gtest          ## 使用測試 queue
+#SBATCH --output=z_2slurm-hugeweather.log  ## 將標準輸出記錄到 log
+#SBATCH --error=z_2slurm-hugeweather.log   ## 將錯誤輸出記錄到同一個 log
+
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
+
+srun --label bash 2_hugeweather_srun_2gpu.sh

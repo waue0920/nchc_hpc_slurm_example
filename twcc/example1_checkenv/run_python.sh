@@ -1,75 +1,53 @@
 #!/bin/bash
 
-### 參數設定區 ###
-#WORKDIR=~/nchc_hpc_slurm_example/twcc/example1_checkenv
-WORKDIR=./
-
-## 工作目錄
+### 必要參數設定 ###
 HOSTNAME=$(hostname | cut -d '.' -f 1)
-echo "[$HOSTNAME]==================="
-echo "[$HOSTNAME][0] !First: the workspace"
-cd $WORKDIR
-echo "[$HOSTNAME][0] WORKDIR=$WORKDIR"
 
-## 設定 NCCL
-export NCCL_DEBUG=INFO
+### 切換到腳本所在目錄 ###
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+cd "$SCRIPT_DIR"
 
-## SLURM 環境
-NPROC_PER_NODE=${SLURM_GPUS_ON_NODE:-1}
-NNODES=${SLURM_NNODES:-1}
-NODE_RANK=${SLURM_NODEID:-0}
-if [ -z "$MASTER_ADDR" ]; then
-    echo "oh! why MASTER_ADDR not found!"
-    MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
-fi
+### 環境變數抓取 ###
+MASTER_ADDR=$(scontrol show hostname $SLURM_NODELIST | head -n 1)
+NGPU=$(nvidia-smi -L | wc -l)
 
-#NGPU=$SLURM_GPUS_ON_NODE #這個值常抓不到
-#NGPU=$NPROC_PER_NODE # NPROC_PER_NODE是gpu數但在這邊也抓錯
-if [ -z "$NGPU" ]; then
-    echo "oh! why NPROC_PER_NODE not found!"
-    NGPU=$(nvidia-smi -L | wc -l)  # 等於 $SLURM_GPUS_ON_NODE
-fi
-
+# Port 檢測：檢查 9527 是否被佔用
 MASTER_PORT=9527
-DEVICE_LIST=$(seq -s, 0 $(($NGPU-1)) | paste -sd, -) # 0,1,...n-1
-NNODES=${SLURM_NNODES:-1}               # 節點總數，默認為 1
-NODE_RANK=${SLURM_NODEID}            # 當前節點的 rank，默認為 0
-
-echo "[$HOSTNAME][1] Debug Information:"
-echo "-------------------"
-echo "[$HOSTNAME][1] SLURM_NODEID: $NODE_RANK"
-echo "[$HOSTNAME][1] SLURM_NNODES: $NNODES"
-echo "[$HOSTNAME][1] SLURM_GPUS_ON_NODE: $NGPU"
-echo "[$HOSTNAME][1] Device: $DEVICE_LIST"
-echo "[$HOSTNAME][1] MASTER_ADDR: $MASTER_ADDR"
-echo "[$HOSTNAME][1] MASTER_PORT: $MASTER_PORT"
-echo "[$HOSTNAME][1] Current Hostname: $(hostname)"
-echo "-------------------"
-### 環境檢查區 ###
-## Debug: 確認 Python 路徑與版本
-echo "[$HOSTNAME][2] Python Path and Version:"
-echo "-------------------"
-which python
-python --version
-echo "[$HOSTNAME][2] PYTHONPATH: $PYTHONPATH"
-echo "-------------------"
-
-
-echo "[$HOSTNAME][2] Activated Conda Environment:"
-echo "-------------------"
-python -c "import sys; print('\n'.join(sys.path))"
-wandb login
-python -c 'import wandb'
-python -c 'import torch; print(torch.__version__)'
-echo "[$HOSTNAME][3] env.py"
-python env.py
-echo "-------------------"
-
-
-## 檢查執行結果
-if [ $? -ne 0 ]; then
-  echo "Error: TRAIN_CMD execution failed on node $(hostname)" >&2
-  exit 1
+if (echo >/dev/tcp/localhost/$MASTER_PORT) 2>/dev/null; then
+    echo "[$HOSTNAME] ERROR: Port $MASTER_PORT is already in use on $(hostname)!"
+    echo "[$HOSTNAME] Please choose a different port or terminate the process using that port."
+    exit 1
 fi
 
-echo "[$HOSTNAME]==================="
+### 環境資訊輸出 ###
+echo "[$HOSTNAME]============================================"
+echo "[$HOSTNAME] Working Directory: $SCRIPT_DIR"
+echo "[$HOSTNAME] SLURM_NODEID: $SLURM_NODEID"
+echo "[$HOSTNAME] SLURM_NNODES: $SLURM_NNODES"
+echo "[$HOSTNAME] GPU Count: $NGPU"
+echo "[$HOSTNAME] Master Address: $MASTER_ADDR"
+echo "[$HOSTNAME] Master Port: $MASTER_PORT"
+echo "[$HOSTNAME]============================================"
+
+### 選擇執行環境 (以下三種方法請選擇一種取消註解)
+
+### 方法一： Conda 環境 (透過 activate)
+eval "$(conda shell.bash hook)"  # 把整個 conda 環境功能載入當前 shell
+conda activate yolo9t2
+python env.py
+
+# ### 方法二： Singularity 容器環境
+# SIF=/work/waue0920/open_access/yolo9t2_ngc2306.sif
+# singularity exec --nv $SIF python env.py
+
+# ### 方法三： Conda run (預設，不需要 activate)
+# CONDA_EXE=$(which conda)             # 獲取 conda 可執行檔路徑，用 conda run 套用環境
+# $CONDA_EXE run -n yolo9t2 --no-capture-output python env.py
+
+### 檢查執行結果 ###
+if [ $? -ne 0 ]; then
+    echo "[$HOSTNAME] Error: env.py execution failed!"
+    exit 1
+fi
+
+echo "[$HOSTNAME]============================================"

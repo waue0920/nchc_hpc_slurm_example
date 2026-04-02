@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --job-name=T2MiniWMPI
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=4
+#SBATCH --gres=gpu:2
+#SBATCH --partition=gtest
+#SBATCH --output=z_3slurm-miniweather_mpi.log
+#SBATCH --error=z_3slurm-miniweather_mpi.log
+
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
+
+srun --label bash 3_miniweather_mpi_2node.sh
