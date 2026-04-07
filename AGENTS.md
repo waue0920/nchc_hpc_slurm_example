@@ -4,7 +4,7 @@
 - **台灣 AI 雲 (TWCC - GPU)** `[twcc]`
 - **台灣杉一號 (Taiwania 1 - CPU)** `[f1]`
 - **台灣杉一號 ARM (Taiwania 1 - ARM)** `[f1_arm]`
-- **晶創主機 / 創進一號 (N5/H100 - GPU)** `[n5]`
+- **晶創主機  (N5/H100 - GPU)** `[n5]`
 
 當你在這個工作區內產生程式碼、腳本，或回答使用者問題時，**必須**嚴格遵守以下規則：
 
@@ -43,8 +43,9 @@ MASTER_PORT=$(( 10000 + (${SLURM_JOB_ID:-9527} % 50000) ))
 
 ## 5. 各平台分區 (Partition) 設定與必備參數
 在撰寫 `.sb` 排程腳本時，有許多參數是**絕對不能漏掉的**，否則 SLURM 會直接拒絕接受任務：
-- **計畫帳號 (Account ID)**：必須指定 `#SBATCH -A <計畫ID>` (或 `--account=`)，例如 `-A GOV113119`。
-- **GPU 數量 (-gres=gpu:N)**：只要使用的 Partition 帶有 GPU（如 `gtest`, `gp1d` 等），必須加上 `#SBATCH --gres=gpu:N`。
+- **計畫帳號 (--account)**：必須指定 `#SBATCH -A <計畫ID>` (或 `--account=`)，例如 `-A GOV113119`。
+- **GPU 數量 (--gres=gpu:N)**：只要使用的 Partition 帶有 GPU（如 `gtest`, `gp1d` 等），必須加上 `#SBATCH --gres=gpu:N`。
+- **程序數量 (--ntasks-per-node=1)**: pytorch 與 MPI 不同，**每個節點僅能一個任務**，#SBATCH --ntasks-per-node=1 務必宣告，否則出錯或僅啟動一個節點執行任務
 請優先參考工作區內的 [hpc_partitions.md](hpc_partitions.md) 檔案，為你在撰寫 `.sb` 時提供各平台的 `#SBATCH --partition` 正確名稱參考。確保針對不同的叢集使用正確的分區與上述必備參數。
 
 ## 6. 使用工具的限制

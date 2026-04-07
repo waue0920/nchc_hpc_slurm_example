@@ -33,7 +33,7 @@ echo "[$HOSTNAME]============================================"
 
 ### 方法一： Conda 環境 (透過 activate)
 eval "$(conda shell.bash hook)"  # 把整個 conda 環境功能載入當前 shell
-conda activate yolo9t2
+conda activate base
 python env.py
 
 # ### 方法二： Singularity 容器環境
@@ -42,7 +42,7 @@ python env.py
 
 # ### 方法三： Conda run (預設，不需要 activate)
 # CONDA_EXE=$(which conda)             # 獲取 conda 可執行檔路徑，用 conda run 套用環境
-# $CONDA_EXE run -n yolo9t2 --no-capture-output python env.py
+# $CONDA_EXE run -n base --no-capture-output python env.py
 
 ### 檢查執行結果 ###
 if [ $? -ne 0 ]; then

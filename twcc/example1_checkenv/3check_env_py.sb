@@ -31,7 +31,7 @@ export NGPU
 
 ### 方法一： 先啟動 Conda 環境，再用絕對路徑呼叫 Python
 eval "$(conda shell.bash hook)"
-conda activate yolo9t2
+conda activate base
 cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which python) env.py"
 
 ### 方法二： 使用 Singularity 容器環境
@@ -40,7 +40,7 @@ cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which python) env.py"
 # cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $SINGULARITY python env.py"
 
 ### 方法三： 使用 conda run (推薦，最簡潔的 conda 跨節點執行方式)
-# cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which conda) run -n yolo9t2 python env.py"
+# cmd="srun --label --gres=gpu:$NGPU --mpi=pmix $(which conda) run -n base python env.py"
 
 
 ### 腳本檢查
