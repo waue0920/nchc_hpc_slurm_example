@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=YoloWorld_FT     ## Job 名稱
+#SBATCH -A GOV113119                 ## 錢包id（請換成自己的計畫帳號）
+#SBATCH --nodes=1                    ## 單節點多 GPU 微調
+#SBATCH --gres=gpu:4                 ## 請求 4 張 GPU
+#SBATCH --cpus-per-task=16           ## GPU:CPU = 1:4
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=01:00:00
+#SBATCH --partition=gtest
+#SBATCH --output=z_2yoloworld_finetune.log
+#SBATCH --error=z_2yoloworld_finetune.log
+
+### 切換到腳本所在目錄 ###
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
+
+echo "========= Master: $(hostname) =========="
+echo "執行 YOLO-World 多 GPU 微調訓練（單節點 4-GPU）"
+echo "========================================="
+
+cmd="srun --label bash yoloworld_finetune.sh"
+echo "$cmd"
+$cmd

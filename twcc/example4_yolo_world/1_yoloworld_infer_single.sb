@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=YoloWorld_Infer  ## Job 名稱
+#SBATCH -A GOV113119                 ## 錢包id（請換成自己的計畫帳號）
+#SBATCH --nodes=1                    ## 推論只需 1 個節點
+#SBATCH --gres=gpu:1                 ## 請求 1 張 GPU
+#SBATCH --cpus-per-task=4            ## GPU:CPU = 1:4
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=00:15:00
+#SBATCH --partition=gtest            ## gtest / gp1d / gp2d
+#SBATCH --output=z_1yoloworld_infer.log
+#SBATCH --error=z_1yoloworld_infer.log
+
+### 切換到腳本所在目錄 ###
+SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
+SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+cd "$SCRIPT_DIR"
+
+echo "========= Master: $(hostname) =========="
+echo "執行 YOLO-World 開放詞彙推論（單節點單 GPU）"
+echo "========================================="
+
+cmd="srun --label bash yoloworld_infer.sh"
+echo "$cmd"
+$cmd
