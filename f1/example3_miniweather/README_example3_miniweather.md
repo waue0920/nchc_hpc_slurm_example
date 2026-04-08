@@ -40,7 +40,7 @@
 
 ## 3. run slurm job
 
-> cd ~/nchc_hpc_slurm_example/f1/example2_project
+> cd ~/nchc_hpc_slurm_example/f1/example3_miniweather
 > sbatch walk6_2x2_sb.sb
 
 ## 4. view the result

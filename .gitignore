@@ -10,6 +10,7 @@ test*/
 backup*/
 yolov9/
 *.pt
+*.sif
 # miniweather artifacts
 largeweather_*
 hugeweather_*
