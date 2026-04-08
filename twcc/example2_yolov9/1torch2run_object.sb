@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=16         ## 在TWCC上 GPU:CPU 比例，1:4
 #SBATCH --ntasks-per-node=1      ## 每個節點執行 1 個任務
 #SBATCH --time=00:10:00            ## 最長執行時間 n 分鐘
-#SBATCH --partition=gtest           ## 測試分區 gtest, gp1d, gp2d, gp4d
+#SBATCH --partition=gp1d           ## 測試分區 gtest, gp1d, gp2d, gp4d
 #SBATCH --output=z_1slurm-t2run_object_train.log  ## 將標準輸出記錄到 log
 #SBATCH --error=z_1slurm-t2run_object_train.log   ## 將錯誤輸出記錄到同一個 log
 
