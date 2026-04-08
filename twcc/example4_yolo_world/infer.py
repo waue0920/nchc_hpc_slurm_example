@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--model_size",
         type=str,
-        default="l",
+        default="s",
         choices=["s", "m", "l", "x"],
         help="YOLO-World 模型大小",
     )
@@ -53,7 +53,8 @@ def main():
     except ImportError:
         raise ImportError("請先執行 setup_scripts/1_prepare_conda_env.sh 安裝 ultralytics >= 8.1")
 
-    model_name = f"yolov8{args.model_size}-worldv2.pt"
+    # 為了確保 SLURM 執行時找得到剛剛下載的 weights
+    model_name = f"weights/yolov8{args.model_size}-worldv2.pt"
     print(f"載入模型: {model_name}")
     model = YOLOWorld(model_name)
 

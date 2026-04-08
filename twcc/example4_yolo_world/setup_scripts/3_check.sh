@@ -66,9 +66,6 @@ echo "===================================="
 echo "【3】預訓練權重檢查"
 echo "===================================="
 check_file "yolov8s-worldv2.pt"  "$EXAMPLE_DIR/weights/yolov8s-worldv2.pt"
-check_file "yolov8m-worldv2.pt"  "$EXAMPLE_DIR/weights/yolov8m-worldv2.pt"
-check_file "yolov8l-worldv2.pt"  "$EXAMPLE_DIR/weights/yolov8l-worldv2.pt"
-check_file "yolov8x-worldv2.pt"  "$EXAMPLE_DIR/weights/yolov8x-worldv2.pt"
 
 # ============================================================
 echo ""
@@ -87,7 +84,7 @@ echo "===================================="
 check "YOLOWorld 模型載入" \
     "python -c \"
 from ultralytics import YOLOWorld
-m = YOLOWorld('$EXAMPLE_DIR/weights/yolov8l-worldv2.pt')
+m = YOLOWorld('$EXAMPLE_DIR/weights/yolov8s-worldv2.pt')
 m.set_classes(['person','car','dog'])
 print('model OK')
 \""

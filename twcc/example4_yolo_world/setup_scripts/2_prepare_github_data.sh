@@ -32,31 +32,16 @@ else
 fi
 
 # ============================================================
-# 2. 安裝 YOLO-World repo 額外依賴（mmcv 系列）
-# ============================================================
-echo ""
-echo "[2/4] 安裝 YOLO-World repo 依賴（mmcv / mmdet / mmengine）..."
-pip install -q openmim
-mim install -q mmengine
-mim install -q "mmcv>=2.0.0"
-mim install -q mmdet
-pip install -q -r "$YOLOWORLD_DIR/requirements.txt" 2>/dev/null || true
-echo "  [OK] 依賴安裝完成。"
-
-# ============================================================
-# 3. 下載預訓練權重（yolov8s/m/l/x-worldv2.pt）
+# 2. 下載預訓練權重 (以 yolov8s-worldv2.pt 作為輕量範例代表)
 # ============================================================
 WEIGHTS_DIR="$EXAMPLE_DIR/weights"
 mkdir -p "$WEIGHTS_DIR"
 
 echo ""
-echo "[3/4] 下載預訓練權重..."
+echo "[2/3] 下載預訓練權重 (yolov8s-worldv2.pt)..."
 
 declare -A WEIGHT_URLS=(
     ["yolov8s-worldv2.pt"]="https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8s-worldv2.pt"
-    ["yolov8m-worldv2.pt"]="https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8m-worldv2.pt"
-    ["yolov8l-worldv2.pt"]="https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8l-worldv2.pt"
-    ["yolov8x-worldv2.pt"]="https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8x-worldv2.pt"
 )
 
 for FNAME in "${!WEIGHT_URLS[@]}"; do
@@ -71,13 +56,13 @@ for FNAME in "${!WEIGHT_URLS[@]}"; do
 done
 
 # ============================================================
-# 4. 下載測試資料集（COCO128，快速功能驗證用）
+# 3. 下載測試資料集（COCO128，快速功能驗證用）
 # ============================================================
 DATA_DIR="$EXAMPLE_DIR/datasets"
 mkdir -p "$DATA_DIR"
 
 echo ""
-echo "[4/4] 下載 COCO128 測試資料集..."
+echo "[3/3] 下載 COCO128 測試資料集..."
 
 COCO128_ZIP="$DATA_DIR/coco128.zip"
 COCO128_DIR="$DATA_DIR/coco128"

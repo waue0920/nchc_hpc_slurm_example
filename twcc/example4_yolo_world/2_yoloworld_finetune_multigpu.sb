@@ -1,11 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=YoloWorld_FT     ## Job 名稱
 #SBATCH -A GOV113119                 ## 錢包id（請換成自己的計畫帳號）
-#SBATCH --nodes=1                    ## 單節點多 GPU 微調
+#SBATCH --nodes=2                    ## 單節點多 GPU 微調
 #SBATCH --gres=gpu:4                 ## 請求 4 張 GPU
 #SBATCH --cpus-per-task=16           ## GPU:CPU = 1:4
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=01:00:00
 #SBATCH --partition=gtest
 #SBATCH --output=z_2yoloworld_finetune.log
 #SBATCH --error=z_2yoloworld_finetune.log

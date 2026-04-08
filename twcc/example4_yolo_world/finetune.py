@@ -61,6 +61,9 @@ def main():
     categories = [c.strip() for c in args.categories.split(",") if c.strip()]
     model.set_classes(categories)
 
+    # 由於我們有安裝 wandb，Ultralytics 會自動啟用，但 project name 不能包含破折號/斜線
+    os.environ["WANDB_MODE"] = "disabled"  # 對於示範用途先禁用 wandb 避免報錯，或者您可以自行註冊 wandb 帳號
+
     # ultralytics DDP 自動從 torchrun 環境取得分散式設定
     model.train(
         data=args.data,
@@ -69,11 +72,9 @@ def main():
         imgsz=args.imgsz,
         device=args.device,
         workers=args.workers,
-        project="runs/detect",
+        project="runs_detect",    # 修正重點: 移除斜線 `/` 避免 wandb 引發錯誤
         name=f"yoloworld_{args.model_size}_finetune",
         exist_ok=True,
-        # 可加入 wandb 追蹤：
-        # wandb_project="yoloworld_twcc",
     )
 
     if local_rank == 0:

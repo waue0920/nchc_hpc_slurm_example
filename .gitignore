@@ -14,3 +14,4 @@ yolov9/
 # miniweather artifacts
 largeweather_*
 hugeweather_*
+twcc/example4_yolo_world/runs_detect/
