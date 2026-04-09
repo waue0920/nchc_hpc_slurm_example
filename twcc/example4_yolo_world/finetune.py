@@ -16,15 +16,20 @@ import os
 
 # ===================================================================
 # 【HPC 多節點/跨主機 DDP 動態修正 Patch】
-# 目的：解決 Ultralytics 8.x 官方處理外部 torchrun 啟動時的兩個底層 Bug：
+# 目的：解決 Ultralytics 8.x 官方處理外部 torchrun 啟動時的三個底層 Bug：
 # 1. args.device 長度蓋過系統的實際 WORLD_SIZE (導致跨節點進程數錯亂)
 # 2. 把全域 RANK 當作 LOCAL_RANK 傳入 torch.cuda.set_device (導致 device ordinal 報錯)
+# 3. DistributedDataParallel 的 device_ids 使用全域 RANK 而非 LOCAL_RANK
+#    (跨節點時 RANK >= 本機 GPU 數，造成 _streams[device] IndexError)
 # 此處覆寫可避免修改安裝環境 (site-packages)，維持教材的絕對可移植性。
 # ===================================================================
 try:
+    import torch
+    import torch.nn as nn
     from ultralytics.engine.trainer import BaseTrainer
-    
-    # 覆寫原本的 train (強迫吃系統環境變數裡的 WORLD_SIZE 取代 device 長度)
+
+    # ------ Patch 1: 覆寫 train() ------
+    # 強迫吃系統環境變數裡的 WORLD_SIZE 取代 device 長度
     orig_train = BaseTrainer.train
     def patched_train(self):
         world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -34,9 +39,9 @@ try:
             orig_train(self)            # 退回單機/原生模式
     BaseTrainer.train = patched_train
 
-    # 覆寫原本的 _setup_ddp (解開 RANK 與 LOCAL_RANK 的混淆)
+    # ------ Patch 2: 覆寫 _setup_ddp() ------
+    # 解開 RANK 與 LOCAL_RANK 的混淆
     def patched_setup_ddp(self, world_size):
-        import torch
         import torch.distributed as dist
         from datetime import timedelta
         local_rank = int(os.environ.get("LOCAL_RANK", 0))
@@ -52,6 +57,28 @@ try:
             world_size=world_size,
         )
     BaseTrainer._setup_ddp = patched_setup_ddp
+
+    # ------ Patch 3: 覆寫 _setup_train() ------
+    # 原始碼在 _setup_train 中執行：
+    #   self.model = DDP(self.model, device_ids=[RANK], ...)
+    # 跨節點時 RANK (全域) 可能 >= 本機 GPU 數量，導致：
+    #   torch/nn/parallel/_functions.py _get_stream → _streams[device] IndexError
+    # 修正：在原始 _setup_train 執行完畢後，用 LOCAL_RANK 重新包裝 DDP
+    orig_setup_train = BaseTrainer._setup_train
+    def patched_setup_train(self, world_size):
+        orig_setup_train(self, world_size)
+        # 只在多 GPU (DDP) 模式下重新包裝
+        if world_size > 1:
+            local_rank = int(os.environ.get("LOCAL_RANK", 0))
+            # 拆掉原始用錯誤 device_ids 包裝的 DDP，取出原始 module
+            raw_model = self.model.module if hasattr(self.model, "module") else self.model
+            self.model = nn.parallel.DistributedDataParallel(
+                raw_model,
+                device_ids=[local_rank],
+                find_unused_parameters=True,
+            )
+    BaseTrainer._setup_train = patched_setup_train
+
 except ImportError:
     pass
 # ===================================================================
