@@ -58,7 +58,8 @@ nest-asyncio==1.6.0
 networkx==3.4.2
 ninja==1.11.1.3
 nltk==3.9.1
-numpy==1.22.4
+#numpy==1.22.4 # 原相依於8.2.0 但 ultralyc8.3.0相衝突
+numpy>=1.23.0,<2.0.0
 opencv-python-headless==4.10.0.84
 packaging==24.2
 pandas==2.2.3
@@ -135,6 +136,8 @@ setuptools==69.5.1
 # ==========================================
 # YOLO-World Specific Additions
 # ==========================================
+
+# ultralytics==8.2.0 # 此版本的 pytorch ddp rank 設定有bug ，因此升級成 8.3.0
 ultralytics==8.3.0
 supervision==0.19.0
 wandb

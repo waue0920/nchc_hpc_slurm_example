@@ -14,6 +14,47 @@ torchrun 呼叫方式（由 yoloworld_finetune.sh 自動處理）：
 import argparse
 import os
 
+# ===================================================================
+# 【HPC 多節點/跨主機 DDP 動態修正 Patch】
+# 目的：解決 Ultralytics 8.x 官方處理外部 torchrun 啟動時的兩個底層 Bug：
+# 1. args.device 長度蓋過系統的實際 WORLD_SIZE (導致跨節點進程數錯亂)
+# 2. 把全域 RANK 當作 LOCAL_RANK 傳入 torch.cuda.set_device (導致 device ordinal 報錯)
+# 此處覆寫可避免修改安裝環境 (site-packages)，維持教材的絕對可移植性。
+# ===================================================================
+try:
+    from ultralytics.engine.trainer import BaseTrainer
+    
+    # 覆寫原本的 train (強迫吃系統環境變數裡的 WORLD_SIZE 取代 device 長度)
+    orig_train = BaseTrainer.train
+    def patched_train(self):
+        world_size = int(os.environ.get("WORLD_SIZE", 1))
+        if world_size > 1 and "LOCAL_RANK" in os.environ:
+            self._do_train(world_size)  # torchrun 啟動模式，直接跳過 args 判斷
+        else:
+            orig_train(self)            # 退回單機/原生模式
+    BaseTrainer.train = patched_train
+
+    # 覆寫原本的 _setup_ddp (解開 RANK 與 LOCAL_RANK 的混淆)
+    def patched_setup_ddp(self, world_size):
+        import torch
+        import torch.distributed as dist
+        from datetime import timedelta
+        local_rank = int(os.environ.get("LOCAL_RANK", 0))
+        rank = int(os.environ.get("RANK", 0))
+        # 關鍵修正：指派設備必須用 local_rank
+        torch.cuda.set_device(local_rank)
+        self.device = torch.device("cuda", local_rank)
+        os.environ["TORCH_NCCL_BLOCKING_WAIT"] = "1"
+        dist.init_process_group(
+            backend="nccl" if dist.is_nccl_available() else "gloo",
+            timeout=timedelta(seconds=10800),
+            rank=rank,                 # group 通訊仍需要全域 rank
+            world_size=world_size,
+        )
+    BaseTrainer._setup_ddp = patched_setup_ddp
+except ImportError:
+    pass
+# ===================================================================
 
 def parse_args():
     parser = argparse.ArgumentParser(description="YOLO-World Fine-tune (DDP)")
@@ -72,6 +113,8 @@ def main():
         imgsz=args.imgsz,
         device=args.device,
         workers=args.workers,
+        amp=False,                # 關閉自動混合精度避免 PyTorch 2.0.1+NCCL 報錯 "Unconvertible NCCL type"
+        deterministic=False,      # 關閉確定性演算法，避免 CUDA 11.7 不支援 CuBLAS 的確定性而報錯
         project="runs_detect",    # 修正重點: 移除斜線 `/` 避免 wandb 引發錯誤
         name=f"yoloworld_{args.model_size}_finetune",
         exist_ok=True,

@@ -15,7 +15,7 @@ SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 cd "$SCRIPT_DIR"
 
 echo "========= Master: $(hostname) =========="
-echo "執行 YOLO-World 多 GPU 微調訓練（單節點 4-GPU）"
+echo "執行 YOLO-World 多 GPU 微調訓練"
 echo "========================================="
 
 cmd="srun --label bash yoloworld_finetune.sh"
