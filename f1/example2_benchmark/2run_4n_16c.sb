@@ -1,16 +1,15 @@
 #!/bin/bash
 #SBATCH -A GOV113119
-#SBATCH -p ctest
+#SBATCH --partition=development
 #SBATCH --job-name=bench_4n_16c
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=16
-#SBATCH -o out_4n_16c.log
-#SBATCH -e err_4n_16c.log
+#SBATCH -o run_4n_16c.log
 
 # 1) 動態解析腳本路徑並進入
 SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 cd "$SCRIPT_DIR"
 
-# 2) 單一執行分離指令腳本
-srun --label bash ./run.sh
+# 2) 執行單一實例的 run.sh，由其內部的 srun 展開 MPI
+bash ./run.sh

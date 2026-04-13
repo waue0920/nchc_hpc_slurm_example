@@ -1,0 +1,30 @@
+#!/bin/bash
+#SBATCH -A GOV113119               ## 錢包id
+#SBATCH --job-name=checkenv       ## 工作名稱
+#SBATCH --output=z_4check.log ## 標準輸出與錯誤輸出同時記錄到此檔案
+#SBATCH --error=z_4check.log  ## 標準錯誤輸出記錄同一檔案
+#SBATCH --nodes=1                 ## 請求n個節點
+#SBATCH --ntasks-per-node=2        ## 一個node 跑幾個task
+#SBATCH --cpus-per-task=1         ## 單個任務請求n 個 CPU
+#SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
+#SBATCH --partition=development         ## 測試分區
+
+
+### 方法一： 先啟動 Conda 環境，再用絕對路徑呼叫 Python
+#ml tools/miniconda3
+#eval "$(conda shell.bash hook)"
+#conda activate base
+#cmd="srun --label --mpi=pmix $(which python) env.py"
+
+### 方法二： 使用 Singularity 容器環境
+### sif
+#SIF=/work1/waue0920/open_access/pytorch_23.06-py3.sif  # 這個是 pytorch 環境
+#SINGULARITY="singularity run $SIF"
+#cmd="srun --label --mpi=pmix $SINGULARITY python env.py"
+
+### 方法三： 使用 conda run (推薦，最簡潔的 conda 跨節點執行方式)
+cmd="srun --label --mpi=pmix $(which conda) run -n base python env.py"
+
+
+### 執行
+$cmd

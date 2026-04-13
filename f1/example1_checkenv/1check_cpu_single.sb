@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=2        ## 一個node 跑幾個task
 #SBATCH --cpus-per-task=1         ## 單個任務請求n 個 CPU
 #SBATCH --time=00:10:00           ## 最長執行時間 n 分鐘
-#SBATCH --partition=ct112         ## 測試分區
+#SBATCH --partition=development         ## 測試分區
 
 # 載入必要的模組 (根據叢集需求)
 module purge
@@ -19,8 +19,8 @@ echo "1. 節點資訊"
 echo "目前執行節點: $(hostname)"
 
 echo "==============================="
-echo "2. GPU 數量"
-nvidia-smi --list-gpus
+echo "2. CPU 數量"
+lscpu | egrep 'CPU\(s\)|Core\(s\) per socket|Socket\(s\)|Thread\(s\) per core'
 
 echo "==============================="
 echo "3. SLURM 系統參數"

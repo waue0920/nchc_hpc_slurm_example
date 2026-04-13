@@ -1,16 +1,13 @@
 #!/bin/bash
 #SBATCH -A GOV113119
-#SBATCH -p ctest
+#SBATCH --partition=development
 #SBATCH --job-name=bench_2n_32c
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=32
-#SBATCH -o out_2n_32c.log
-#SBATCH -e err_2n_32c.log
+#SBATCH -o run_2n_32c.log
 
-# 1) 動態解析腳本路徑並進入
 SCRIPT_PATH=$(scontrol show job $SLURM_JOB_ID | awk -F= '/Command=/{print $2}')
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 cd "$SCRIPT_DIR"
 
-# 2) 單一執行分離指令腳本
-srun --label bash ./run.sh
+bash ./run.sh
